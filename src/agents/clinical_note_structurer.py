@@ -4,27 +4,20 @@ Converts unstructured clinical notes into SOAP format
 (Subjective, Objective, Assessment, Plan) using LLM with medical prompting.
 """
 
+from __future__ import annotations
+
 import os
 from typing import Optional
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 
 from src.guardrails.medical_safety import MedicalSafetyGuardrails
 
 load_dotenv()
-
-
-class SOAPNote(BaseModel):
-    """Structured SOAP note format."""
-    subjective: SubjectiveSection = Field(description="Subjective findings from patient history")
-    objective: ObjectiveSection = Field(description="Objective clinical findings")
-    assessment: AssessmentSection = Field(description="Clinical assessment and diagnoses")
-    plan: PlanSection = Field(description="Treatment and management plan")
-    metadata: NoteMetadata = Field(description="Additional note metadata")
 
 
 class SubjectiveSection(BaseModel):
@@ -70,8 +63,13 @@ class NoteMetadata(BaseModel):
     missing_elements: list[str] = Field(description="Important clinical elements not documented")
 
 
-# NOTE: Forward references resolved by model_rebuild below
-SOAPNote.model_rebuild()
+class SOAPNote(BaseModel):
+    """Structured SOAP note format."""
+    subjective: SubjectiveSection = Field(description="Subjective findings from patient history")
+    objective: ObjectiveSection = Field(description="Objective clinical findings")
+    assessment: AssessmentSection = Field(description="Clinical assessment and diagnoses")
+    plan: PlanSection = Field(description="Treatment and management plan")
+    metadata: NoteMetadata = Field(description="Additional note metadata")
 
 SOAP_SYSTEM_PROMPT = """You are a clinical documentation expert specializing in converting unstructured clinical notes into standardized SOAP format (Subjective, Objective, Assessment, Plan).
 
